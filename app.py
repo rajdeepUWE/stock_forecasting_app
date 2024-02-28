@@ -9,7 +9,6 @@ import streamlit as st
 import plotly.graph_objs as go
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from keras.models import load_model
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 from sklearn.linear_model import LinearRegression
