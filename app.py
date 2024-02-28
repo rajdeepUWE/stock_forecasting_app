@@ -13,6 +13,8 @@ from keras.models import load_model
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 from sklearn.linear_model import LinearRegression
+from tensorflow.keras.models import load_model
+
 
 # Load the pre-trained Keras model
 keras_model = load_model('Stock Predictions Model1.keras')
