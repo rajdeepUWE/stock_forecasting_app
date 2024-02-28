@@ -1,3 +1,15 @@
+import sys
+
+# Attempt to install yfinance if not already installed
+!{sys.executable} -m pip install yfinance==0.1.63
+
+# Now import yfinance
+import yfinance as yf
+
+# Continue with the rest of your Streamlit app code below
+
+
+
 import numpy as np
 import pandas as pd
 import yfinance as yf
