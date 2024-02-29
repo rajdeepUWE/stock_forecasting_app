@@ -11,7 +11,7 @@ from sklearn.svm import SVR
 from sklearn.linear_model import LinearRegression
 
 # Load the pre-trained Keras model
-keras_model = load_model('Model2.keras')
+keras_model = load_model('Stock Predictions Model.keras')
 
 # Function to train and predict using Linear Regression
 def linear_regression_predict(train_data, test_data):
