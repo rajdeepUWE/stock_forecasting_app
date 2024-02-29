@@ -10,7 +10,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.svm import SVR
 from sklearn.linear_model import LinearRegression
 
-# Load the pre-trained Keras model
+import tensorflow as tf
+from tensorflow.keras.models import load_model
 import requests
 from io import BytesIO
 
@@ -20,10 +21,15 @@ model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/Stoc
 # Fetch the model file from GitHub
 response = requests.get(model_url)
 response.raise_for_status()  # Raise an exception for any HTTP error
-model_data = BytesIO(response.content)
 
-# Load the Keras model from the fetched data
-keras_model = load_model(model_data)
+try:
+    # Load the Keras model from the fetched data
+    model_data = BytesIO(response.content)
+    keras_model = load_model(model_data)
+    st.success("Model loaded successfully!")
+except Exception as e:
+    st.error(f"Error loading the model: {e}")
+
 
 
 # Function to train and predict using Linear Regression
