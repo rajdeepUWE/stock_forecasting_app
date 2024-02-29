@@ -11,7 +11,20 @@ from sklearn.svm import SVR
 from sklearn.linear_model import LinearRegression
 
 # Load the pre-trained Keras model
-keras_model = load_model('Stock Predictions Model.keras')
+import requests
+from io import BytesIO
+
+# URL of the raw Keras model file on GitHub
+model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/Stock%20Predictions%20Model.keras'
+
+# Fetch the model file from GitHub
+response = requests.get(model_url)
+response.raise_for_status()  # Raise an exception for any HTTP error
+model_data = BytesIO(response.content)
+
+# Load the Keras model from the fetched data
+keras_model = load_model(model_data)
+
 
 # Function to train and predict using Linear Regression
 def linear_regression_predict(train_data, test_data):
