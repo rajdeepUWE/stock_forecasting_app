@@ -39,6 +39,9 @@ def forecast_next_7_days_keras(data, model, scaler):
 def main():
     st.title('Stock Market Predictor')
 
+    # Copyright notice
+    st.sidebar.text("Copyright © Rajdeep Sarkar")
+
     # Sidebar: Input parameters
     st.sidebar.subheader('Input Parameters')
     stock = st.sidebar.text_input('Enter Stock Symbol', 'GOOG')
