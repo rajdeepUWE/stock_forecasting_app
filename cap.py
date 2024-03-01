@@ -7,8 +7,21 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVR
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
+import requests
+import tempfile
 import os
 from tensorflow.keras.models import load_model
+
+# Function to load Keras model from a URL
+def load_keras_model_from_github(model_url):
+    response = requests.get(model_url)
+    response.raise_for_status()
+    with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_model_file:
+        temp_model_file.write(response.content)
+        temp_model_file_path = temp_model_file.name
+    keras_model = load_model(temp_model_file_path)
+    os.unlink(temp_model_file_path)
+    return keras_model
 
 # Function to train SVR model
 def train_svr_model(data):
@@ -76,8 +89,9 @@ def main():
     fig_ma200.update_layout(title='Price vs MA100 vs MA200', xaxis_title='Date', yaxis_title='Price')
     st.plotly_chart(fig_ma200)
 
-    # Load the pre-trained Keras model
-    keras_model = load_model('model.h5')
+    # Load the Keras model from GitHub
+    model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/model2.h5'
+    keras_model = load_keras_model_from_github(model_url)
     st.success("Keras Neural Network model loaded successfully!")
 
     # Train SVR model
