@@ -12,7 +12,7 @@ from io import BytesIO
 keras_model = None
 
 # URL of the raw Keras model file on GitHub
-model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/Stock Predictions Model.keras'
+model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/model2.keras'
 
 # Fetch the model file from GitHub
 response = requests.get(model_url)
