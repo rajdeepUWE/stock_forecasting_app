@@ -4,11 +4,6 @@ import yfinance as yf
 import streamlit as st
 import plotly.graph_objs as go
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.svm import SVR
-from sklearn.linear_model import LinearRegression
-import tensorflow as tf
 from tensorflow.keras.models import load_model
 import requests
 from io import BytesIO
@@ -83,9 +78,9 @@ st.plotly_chart(fig_ma200)
 # Machine Learning Model Selection
 ml_models = {
     'Keras Neural Network': keras_model,
-    'Linear Regression': linear_regression_predict,
-    'Random Forest Regressor': random_forest_predict,
-    'Support Vector Regressor': svr_predict
+    # 'Linear Regression': linear_regression_predict,
+    # 'Random Forest Regressor': random_forest_predict,
+    # 'Support Vector Regressor': svr_predict
 }
 
 selected_model = st.selectbox('Select Model', list(ml_models.keys()))
@@ -98,32 +93,22 @@ if selected_model == 'Keras Neural Network' and keras_model is not None:
     y_pred = forecast_next_7_days_keras(data['Close'], keras_model, scaler)
     y_pred = y_pred[-7:]  # Take the last 7 days' predicted values
 
-elif selected_model in ['Linear Regression', 'Random Forest Regressor', 'Support Vector Regressor']:
-    model = ml_models[selected_model]
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaler.fit(data['Close'].values.reshape(-1, 1))
-    x_train = data['Close'].values[:-7].reshape(-1, 1)
-    y_train = data['Close'].values[7:]
-    x_test = data['Close'].values[-7:].reshape(-1, 1)
-    y_true = data['Close'].values[-7:]
-    y_pred = model(x_train, x_test)
-
 # Evaluation Metrics
-rmse, mse, mae, r2 = evaluate_predictions(y_true, y_pred)
+# rmse, mse, mae, r2 = evaluate_predictions(y_true, y_pred)
 
-st.subheader('Evaluation Metrics')
-st.write(f'Root Mean Squared Error (RMSE): {rmse}')
-st.write(f'Mean Squared Error (MSE): {mse}')
-st.write(f'Mean Absolute Error (MAE): {mae}')
-st.write(f'R-squared (R2) Score: {r2}')
+# st.subheader('Evaluation Metrics')
+# st.write(f'Root Mean Squared Error (RMSE): {rmse}')
+# st.write(f'Mean Squared Error (MSE): {mse}')
+# st.write(f'Mean Absolute Error (MAE): {mae}')
+# st.write(f'R-squared (R2) Score: {r2}')
 
 # Plot Original vs Predicted Prices
 st.subheader('Original vs Predicted Prices')
 fig_pred = go.Figure()
 fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_pred, mode='lines', name='Predicted Price',
                                hovertemplate='Date: %{x}<br>Predicted Price: %{y:.2f}<extra></extra>'))
-fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_true, mode='lines', name='Original Price',
-                               hovertemplate='Date: %{x}<br>Original Price: %{y:.2f}<extra></extra>'))
+# fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_true, mode='lines', name='Original Price',
+#                                hovertemplate='Date: %{x}<br>Original Price: %{y:.2f}<extra></extra>'))
 fig_pred.update_layout(title='Original Price vs Predicted Price', xaxis_title='Date', yaxis_title='Price')
 st.plotly_chart(fig_pred)
 
