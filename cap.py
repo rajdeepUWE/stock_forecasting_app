@@ -5,6 +5,9 @@ import streamlit as st
 import plotly.graph_objs as go
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVR
+import requests  # Add this import statement
+import tempfile
+import os
 from tensorflow.keras.models import load_model
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
