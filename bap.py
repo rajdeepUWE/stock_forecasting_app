@@ -7,6 +7,8 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 import requests
 from io import BytesIO
+import tempfile
+import os
 
 # Initialize keras_model variable to None
 keras_model = None
@@ -19,12 +21,17 @@ response = requests.get(model_url)
 response.raise_for_status()  # Raise an exception for any HTTP error
 
 try:
-    # Load the Keras model from the fetched data
-    model_data = BytesIO(response.content)
-    keras_model = load_model(model_data)
+    # Save the model to a temporary file
+    with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_model_file:
+        temp_model_file.write(response.content)
+        temp_model_file_path = temp_model_file.name
+
+    # Load the Keras model from the temporary file
+    keras_model = load_model(temp_model_file_path)
     st.success("Model loaded successfully!")
-except Exception as e:
-    st.error(f"Error loading the model: {e}")
+finally:
+    # Delete the temporary file
+    os.unlink(temp_model_file_path)
 
 # Function to forecast next 7 days' stock prices using Keras model
 def forecast_next_7_days_keras(data, model, scaler):
