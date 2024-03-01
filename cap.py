@@ -4,21 +4,21 @@ import yfinance as yf
 import streamlit as st
 import plotly.graph_objs as go
 from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import load_model
 from sklearn.svm import SVR
 import requests
 import tempfile
 import os
+from tensorflow.keras.models import load_model
 
-# Fetch the Keras model from GitHub and load it
+# Function to load Keras model from a URL
 def load_keras_model_from_github(model_url):
     response = requests.get(model_url)
-    response.raise_for_status()  # Raise an exception for any HTTP error
+    response.raise_for_status()
     with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_model_file:
         temp_model_file.write(response.content)
         temp_model_file_path = temp_model_file.name
     keras_model = load_model(temp_model_file_path)
-    os.unlink(temp_model_file_path)  # Delete the temporary file
+    os.unlink(temp_model_file_path)
     return keras_model
 
 # Function to train SVR model
@@ -89,13 +89,12 @@ def main():
     # Model Training and Prediction
     if selected_model in ml_models and ml_models[selected_model] is not None:
         model = ml_models[selected_model]
+        scaler = MinMaxScaler(feature_range=(0, 1))
+        scaler.fit(data['Close'].values.reshape(-1, 1))
+        y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
         if selected_model == 'Keras Neural Network':
-            scaler = MinMaxScaler(feature_range=(0, 1))
-            scaler.fit(data['Close'].values.reshape(-1, 1))
-            y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
-            y_pred = forecast_next_7_days_keras(data['Close'], model, scaler)
+            y_pred = model.predict(scaler.transform(np.arange(len(data), len(data) + 7).reshape(-1, 1))).flatten()
         elif selected_model == 'Support Vector Regressor (SVR)':
-            y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
             y_pred = forecast_next_7_days_svr(data, model, svr_scaler)
 
         # Plot Original vs Predicted Prices
