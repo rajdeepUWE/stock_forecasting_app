@@ -24,7 +24,7 @@ def load_keras_model_from_github(model_url):
 def forecast_next_7_days_keras(data, model, scaler):
     last_100_days = data[-100:].values.reshape(-1, 1)
     scaled_last_100_days = scaler.transform(last_100_days)
-    x_pred = scaled_last_100_days[-7:].reshape(1, 7, 1)  # Adjusted to predict 7 days
+    x_pred = scaled_last_100_days[-100:].reshape(1, 100, 1)  # Ensure input sequence length is 100
     forecasts = []
     for _ in range(7):
         next_day_pred = model.predict(x_pred)[0, 0]
@@ -33,6 +33,7 @@ def forecast_next_7_days_keras(data, model, scaler):
         x_pred[0, -1, 0] = next_day_pred
     forecasts = np.array(forecasts).reshape(-1, 1)
     return scaler.inverse_transform(forecasts).flatten()
+
 
 # Streamlit UI
 def main():
