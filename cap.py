@@ -5,6 +5,7 @@ import streamlit as st
 import plotly.graph_objs as go
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
+from sklearn.svm import SVR
 import requests
 import tempfile
 import os
@@ -20,27 +21,27 @@ def load_keras_model_from_github(model_url):
     os.unlink(temp_model_file_path)  # Delete the temporary file
     return keras_model
 
-# Function to forecast next 7 days' stock prices using Keras model
-def forecast_next_7_days_keras(data, model, scaler):
+# Function to train SVR model
+def train_svr_model(data):
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaler.fit(data['Close'].values.reshape(-1, 1))
+    X = np.arange(len(data)).reshape(-1, 1)
+    y = data['Close'].values
+    svr_model = SVR(kernel='rbf')
+    svr_model.fit(scaler.transform(X), y)
+    return svr_model, scaler
+
+# Function to forecast next 7 days' stock prices using SVR model
+def forecast_next_7_days_svr(data, model, scaler):
     last_100_days = data[-100:].values.reshape(-1, 1)
     scaled_last_100_days = scaler.transform(last_100_days)
-    x_pred = scaled_last_100_days[-100:].reshape(1, 100, 1)  # Ensure input sequence length is 100
-    forecasts = []
-    for _ in range(7):
-        next_day_pred = model.predict(x_pred)[0, 0]
-        forecasts.append(next_day_pred)
-        x_pred = np.roll(x_pred, -1, axis=1)
-        x_pred[0, -1, 0] = next_day_pred
-    forecasts = np.array(forecasts).reshape(-1, 1)
-    return scaler.inverse_transform(forecasts).flatten()
-
+    X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
+    forecasts = model.predict(X_pred)
+    return scaler.inverse_transform(forecasts)
 
 # Streamlit UI
 def main():
     st.title('Stock Market Predictor')
-
-    # Copyright notice
-    st.sidebar.text("Copyright © Rajdeep Sarkar")
 
     # Sidebar: Input parameters
     st.sidebar.subheader('Input Parameters')
@@ -77,18 +78,29 @@ def main():
     # Load the Keras model
     model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/model2.h5'
     keras_model = load_keras_model_from_github(model_url)
-    st.success("Model loaded successfully!")
+    st.success("Keras Neural Network model loaded successfully!")
+
+    # Train SVR model
+    svr_model, svr_scaler = train_svr_model(data)
+    st.success("SVR model trained successfully!")
 
     # Machine Learning Model Selection
-    ml_models = {'Keras Neural Network': keras_model}
+    ml_models = {'Keras Neural Network': keras_model, 'Support Vector Regressor (SVR)': svr_model}
     selected_model = st.selectbox('Select Model', list(ml_models.keys()))
 
     # Model Training and Prediction
-    if selected_model == 'Keras Neural Network' and keras_model is not None:
-        scaler = MinMaxScaler(feature_range=(0, 1))
-        scaler.fit(data['Close'].values.reshape(-1, 1))
-        y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
-        y_pred = forecast_next_7_days_keras(data['Close'], keras_model, scaler)
+    if selected_model in ml_models and ml_models[selected_model] is not None:
+        if selected_model == 'Keras Neural Network':
+            model = ml_models[selected_model]
+            scaler = MinMaxScaler(feature_range=(0, 1))
+            scaler.fit(data['Close'].values.reshape(-1, 1))
+            y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
+            y_pred = forecast_next_7_days_keras(data['Close'], model, scaler)
+        elif selected_model == 'Support Vector Regressor (SVR)':
+            model = ml_models[selected_model]
+            scaler = svr_scaler
+            y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
+            y_pred = forecast_next_7_days_svr(data['Close'], model, scaler)
 
         # Plot Original vs Predicted Prices
         st.subheader('Original vs Predicted Prices')
