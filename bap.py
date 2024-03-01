@@ -13,7 +13,6 @@ from tensorflow.keras.models import load_model
 import requests
 from io import BytesIO
 
-
 # Initialize keras_model variable to None
 keras_model = None
 
@@ -32,36 +31,9 @@ try:
 except Exception as e:
     st.error(f"Error loading the model: {e}")
 
-
-
-# Function to train and predict using Linear Regression
-def linear_regression_predict(train_data, test_data):
-    lr_model = LinearRegression()
-    lr_model.fit(train_data, np.ravel(train_data))
-    predictions = lr_model.predict(test_data)
-    return predictions
-
-# Function to train and predict using Random Forest Regressor
-def random_forest_predict(train_data, test_data):
-    rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
-    rf_model.fit(train_data, np.ravel(train_data))
-    predictions = rf_model.predict(test_data)
-    return predictions
-
-# Function to train and predict using Support Vector Regressor
-def svr_predict(train_data, test_data):
-    svr_model = SVR(kernel='rbf', C=1000, gamma=0.1)
-    svr_model.fit(train_data, np.ravel(train_data))
-    predictions = svr_model.predict(test_data)
-    return predictions
-
-# Function to calculate moving average
-def calculate_moving_average(data, window_size):
-    return data.rolling(window=window_size).mean()
-
-# Function to forecast next 7 days' stock prices
-def forecast_next_7_days(data, model, scaler):
-    last_100_days = data[-100:].values.reshape(-1, 1)  # Reshape to 2D array with 1 column
+# Function to forecast next 7 days' stock prices using Keras model
+def forecast_next_7_days_keras(data, model, scaler):
+    last_100_days = data[-100:].values.reshape(-1, 1)
     scaled_last_100_days = scaler.transform(last_100_days)
     x_pred = scaled_last_100_days.reshape(1, 100, 1)
     forecasts = []
@@ -72,14 +44,6 @@ def forecast_next_7_days(data, model, scaler):
         x_pred[0, -1, 0] = next_day_pred
     forecasts = np.array(forecasts).reshape(-1, 1)
     return scaler.inverse_transform(forecasts).flatten()
-
-# Function to calculate evaluation metrics
-def evaluate_predictions(y_true, y_pred):
-    rmse = np.sqrt(mean_squared_error(y_true, y_pred))
-    mse = mean_squared_error(y_true, y_pred)
-    mae = mean_absolute_error(y_true, y_pred)
-    r2 = r2_score(y_true, y_pred)
-    return rmse, mse, mae, r2
 
 # Streamlit UI
 st.title('Stock Market Predictor')
@@ -98,8 +62,8 @@ st.subheader('Stock Data')
 st.write(data)
 
 # Calculate moving averages
-ma_100_days = calculate_moving_average(data['Close'], 100)
-ma_200_days = calculate_moving_average(data['Close'], 200)
+ma_100_days = data['Close'].rolling(window=100).mean()
+ma_200_days = data['Close'].rolling(window=200).mean()
 
 # Plot moving averages
 st.subheader('Moving Average Plots')
@@ -127,14 +91,11 @@ ml_models = {
 selected_model = st.selectbox('Select Model', list(ml_models.keys()))
 
 # Model Training and Prediction
-if selected_model == 'Keras Neural Network':
-    model = ml_models[selected_model]
+if selected_model == 'Keras Neural Network' and keras_model is not None:
     scaler = MinMaxScaler(feature_range=(0, 1))
     scaler.fit(data['Close'].values.reshape(-1, 1))
-    last_100_days = data['Close'].values[-100:].reshape(-1, 1)
-    scaled_last_100_days = scaler.transform(last_100_days)
     y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
-    y_pred = forecast_next_7_days(data['Close'], model, scaler)
+    y_pred = forecast_next_7_days_keras(data['Close'], keras_model, scaler)
     y_pred = y_pred[-7:]  # Take the last 7 days' predicted values
 
 elif selected_model in ['Linear Regression', 'Random Forest Regressor', 'Support Vector Regressor']:
