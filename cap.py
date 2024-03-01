@@ -110,32 +110,28 @@ def main():
     selected_model = st.selectbox('Select Model', ['Keras Neural Network', 'Support Vector Regressor (SVR)', 'Linear Regression', 'Random Forest'])
 
     # Model Training and Prediction
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    scaler.fit(data['Close'].values.reshape(-1, 1))
-    y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
-    X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
-    # Scale the input data for prediction
-    X_pred_scaled = scaler.transform(X_pred)
-
     if selected_model == 'Keras Neural Network':
         model = keras_model
-        y_pred = model.predict(X_pred_scaled).flatten()
     elif selected_model == 'Support Vector Regressor (SVR)':
         model = svr_model
-        y_pred = model.predict(X_pred_scaled)
     elif selected_model == 'Linear Regression':
         model = lr_model
-        y_pred = model.predict(X_pred_scaled)
     elif selected_model == 'Random Forest':
         model = rf_model
-        y_pred = model.predict(X_pred_scaled)
+
+    # Make predictions
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaler.fit(data['Close'].values.reshape(-1, 1))
+    X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
+    X_pred_scaled = scaler.transform(X_pred)
+    y_pred = model.predict(X_pred_scaled).flatten()
 
     # Plot Original vs Predicted Prices
     st.subheader('Original vs Predicted Prices')
     fig_pred = go.Figure()
     fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_pred, mode='lines', name='Predicted Price',
                                    hovertemplate='Date: %{x}<br>Predicted Price: %{y:.2f}<extra></extra>'))
-    fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_true, mode='lines', name='Original Price',
+    fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=data['Close'].values[-7:], mode='lines', name='Original Price',
                                    hovertemplate='Date: %{x}<br>Original Price: %{y:.2f}<extra></extra>'))
     fig_pred.update_layout(title='Original Price vs Predicted Price', xaxis_title='Date', yaxis_title='Price')
     st.plotly_chart(fig_pred)
