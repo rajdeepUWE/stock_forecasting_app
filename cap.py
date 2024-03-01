@@ -81,7 +81,7 @@ def main():
     st.plotly_chart(fig_ma200)
 
     # Load the Keras model
-    model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/Stock_Predictions_Model1.h5'
+    model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/model2.h5'
     keras_model = load_keras_model_from_github(model_url)
     if keras_model is not None:
         st.success("Keras Neural Network model loaded successfully!")
