@@ -9,8 +9,6 @@ import requests
 import tempfile
 import os
 from tensorflow.keras.models import load_model
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
 
 # Function to load Keras model from a URL
 def load_keras_model_from_github(model_url):
@@ -87,16 +85,18 @@ def main():
         scaler = MinMaxScaler(feature_range=(0, 1))
         scaler.fit(data['Close'].values.reshape(-1, 1))
         y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
+        X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
         # Scale the input data for prediction
-        X_pred = scaler.transform(np.arange(len(data), len(data) + 7).reshape(-1, 1))
-        y_pred = model.predict(X_pred).flatten()
+        X_pred_scaled = scaler.transform(X_pred)
+        y_pred = model.predict(X_pred_scaled).flatten()
     elif selected_model == 'Support Vector Regressor (SVR)':
         model = svr_model
         scaler = svr_scaler
         y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
+        X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
         # Scale the input data for prediction
-        X_pred = scaler.transform(np.arange(len(data), len(data) + 7).reshape(-1, 1))
-        y_pred = model.predict(X_pred)
+        X_pred_scaled = scaler.transform(X_pred)
+        y_pred = model.predict(X_pred_scaled)
 
     # Plot Original vs Predicted Prices
     st.subheader('Original vs Predicted Prices')
