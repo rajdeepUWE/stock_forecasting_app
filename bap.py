@@ -15,6 +15,10 @@ from tensorflow.keras.models import load_model
 import requests
 from io import BytesIO
 
+
+# Initialize keras_model variable to None
+keras_model = None
+
 # URL of the raw Keras model file on GitHub
 model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/model2.keras'
 
