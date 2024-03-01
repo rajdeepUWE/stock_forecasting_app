@@ -93,27 +93,27 @@ if selected_model == 'Keras Neural Network' and keras_model is not None:
     y_pred = forecast_next_7_days_keras(data['Close'], keras_model, scaler)
     y_pred = y_pred[-7:]  # Take the last 7 days' predicted values
 
-# Evaluation Metrics
-# rmse, mse, mae, r2 = evaluate_predictions(y_true, y_pred)
+    # Evaluation Metrics
+    # rmse, mse, mae, r2 = evaluate_predictions(y_true, y_pred)
 
-# st.subheader('Evaluation Metrics')
-# st.write(f'Root Mean Squared Error (RMSE): {rmse}')
-# st.write(f'Mean Squared Error (MSE): {mse}')
-# st.write(f'Mean Absolute Error (MAE): {mae}')
-# st.write(f'R-squared (R2) Score: {r2}')
+    # st.subheader('Evaluation Metrics')
+    # st.write(f'Root Mean Squared Error (RMSE): {rmse}')
+    # st.write(f'Mean Squared Error (MSE): {mse}')
+    # st.write(f'Mean Absolute Error (MAE): {mae}')
+    # st.write(f'R-squared (R2) Score: {r2}')
 
-# Plot Original vs Predicted Prices
-st.subheader('Original vs Predicted Prices')
-fig_pred = go.Figure()
-fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_pred, mode='lines', name='Predicted Price',
-                               hovertemplate='Date: %{x}<br>Predicted Price: %{y:.2f}<extra></extra>'))
-# fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_true, mode='lines', name='Original Price',
-#                                hovertemplate='Date: %{x}<br>Original Price: %{y:.2f}<extra></extra>'))
-fig_pred.update_layout(title='Original Price vs Predicted Price', xaxis_title='Date', yaxis_title='Price')
-st.plotly_chart(fig_pred)
+    # Plot Original vs Predicted Prices
+    st.subheader('Original vs Predicted Prices')
+    fig_pred = go.Figure()
+    fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_pred, mode='lines', name='Predicted Price',
+                                   hovertemplate='Date: %{x}<br>Predicted Price: %{y:.2f}<extra></extra>'))
+    # fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_true, mode='lines', name='Original Price',
+    #                                hovertemplate='Date: %{x}<br>Original Price: %{y:.2f}<extra></extra>'))
+    fig_pred.update_layout(title='Original Price vs Predicted Price', xaxis_title='Date', yaxis_title='Price')
+    st.plotly_chart(fig_pred)
 
-# Forecasted Prices for Next 7 Days
-st.subheader('Next 7 Days Forecasted Close Prices')
-forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=7)
-forecast_df = pd.DataFrame({'Date': forecast_dates, 'Forecasted Close Price': y_pred})
-st.write(forecast_df)
+    # Forecasted Prices for Next 7 Days
+    st.subheader('Next 7 Days Forecasted Close Prices')
+    forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=7)
+    forecast_df = pd.DataFrame({'Date': forecast_dates, 'Forecasted Close Price': y_pred})
+    st.write(forecast_df)
