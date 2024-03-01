@@ -6,19 +6,7 @@ import plotly.graph_objs as go
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 import requests
-import tempfile
-import os
-
-# Fetch the Keras model from GitHub and load it
-def load_keras_model_from_github(model_url):
-    response = requests.get(model_url)
-    response.raise_for_status()  # Raise an exception for any HTTP error
-    with tempfile.NamedTemporaryFile(suffix=".h5", delete=False) as temp_model_file:
-        temp_model_file.write(response.content)
-        temp_model_file_path = temp_model_file.name
-    keras_model = load_model(temp_model_file_path)
-    os.unlink(temp_model_file_path)  # Delete the temporary file
-    return keras_model
+from io import BytesIO
 
 # Function to forecast next 7 days' stock prices using Keras model
 def forecast_next_7_days_keras(data, model, scaler):
@@ -35,72 +23,72 @@ def forecast_next_7_days_keras(data, model, scaler):
     return scaler.inverse_transform(forecasts).flatten()
 
 # Streamlit UI
-def main():
-    st.title('Stock Market Predictor')
+st.title('Stock Market Predictor')
 
-    # Sidebar: Input parameters
-    st.sidebar.subheader('Input Parameters')
-    stock = st.sidebar.text_input('Enter Stock Symbol', 'GOOG')
-    start_date = st.sidebar.date_input('Select Start Date', pd.to_datetime('1985-01-01'))
-    end_date = st.sidebar.date_input('Select End Date', pd.to_datetime('today'))
+# Sidebar: Input parameters
+st.sidebar.subheader('Input Parameters')
+stock = st.sidebar.text_input('Enter Stock Symbol', 'GOOG')
+start_date = st.sidebar.date_input('Select Start Date', pd.to_datetime('1985-01-01'))
+end_date = st.sidebar.date_input('Select End Date', pd.to_datetime('today'))
 
-    # Fetch stock data
-    data = yf.download(stock, start=start_date, end=end_date)
+# Fetch stock data
+data = yf.download(stock, start=start_date, end=end_date)
 
-    # Display stock data
-    st.subheader('Stock Data')
-    st.write(data)
+# Display stock data
+st.subheader('Stock Data')
+st.write(data)
 
-    # Calculate moving averages
-    ma_100_days = data['Close'].rolling(window=100).mean()
-    ma_200_days = data['Close'].rolling(window=200).mean()
+# Calculate moving averages
+ma_100_days = data['Close'].rolling(window=100).mean()
+ma_200_days = data['Close'].rolling(window=200).mean()
 
-    # Plot moving averages
-    st.subheader('Moving Average Plots')
-    fig_ma100 = go.Figure()
-    fig_ma100.add_trace(go.Scatter(x=data.index, y=ma_100_days, mode='lines', name='MA100'))
-    fig_ma100.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Close Price'))
-    fig_ma100.update_layout(title='Price vs MA100', xaxis_title='Date', yaxis_title='Price')
-    st.plotly_chart(fig_ma100)
+# Plot moving averages
+st.subheader('Moving Average Plots')
+fig_ma100 = go.Figure()
+fig_ma100.add_trace(go.Scatter(x=data.index, y=ma_100_days, mode='lines', name='MA100'))
+fig_ma100.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Close Price'))
+fig_ma100.update_layout(title='Price vs MA100', xaxis_title='Date', yaxis_title='Price')
+st.plotly_chart(fig_ma100)
 
-    fig_ma200 = go.Figure()
-    fig_ma200.add_trace(go.Scatter(x=data.index, y=ma_100_days, mode='lines', name='MA100', line=dict(color='red')))
-    fig_ma200.add_trace(go.Scatter(x=data.index, y=ma_200_days, mode='lines', name='MA200', line=dict(color='blue')))
-    fig_ma200.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Close Price', line=dict(color='green')))
-    fig_ma200.update_layout(title='Price vs MA100 vs MA200', xaxis_title='Date', yaxis_title='Price')
-    st.plotly_chart(fig_ma200)
+fig_ma200 = go.Figure()
+fig_ma200.add_trace(go.Scatter(x=data.index, y=ma_100_days, mode='lines', name='MA100', line=dict(color='red')))
+fig_ma200.add_trace(go.Scatter(x=data.index, y=ma_200_days, mode='lines', name='MA200', line=dict(color='blue')))
+fig_ma200.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='lines', name='Close Price', line=dict(color='green')))
+fig_ma200.update_layout(title='Price vs MA100 vs MA200', xaxis_title='Date', yaxis_title='Price')
+st.plotly_chart(fig_ma200)
 
-    # Load the Keras model
-    model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/model2.h5'
-    keras_model = load_keras_model_from_github(model_url)
+# Load the Keras model from GitHub
+model_url = 'https://github.com/rajdeepUWE/stock_forecasting_app/raw/master/model2.h5'
+response = requests.get(model_url)
+response.raise_for_status()  # Raise an exception for any HTTP error
+
+try:
+    # Load the Keras model from the fetched data
+    model_data = BytesIO(response.content)
+    keras_model = load_model(model_data)
     st.success("Model loaded successfully!")
 
-    # Machine Learning Model Selection
-    ml_models = {'Keras Neural Network': keras_model}
-    selected_model = st.selectbox('Select Model', list(ml_models.keys()))
-
     # Model Training and Prediction
-    if selected_model == 'Keras Neural Network' and keras_model is not None:
-        scaler = MinMaxScaler(feature_range=(0, 1))
-        scaler.fit(data['Close'].values.reshape(-1, 1))
-        y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
-        y_pred = forecast_next_7_days_keras(data['Close'], keras_model, scaler)
+    scaler = MinMaxScaler(feature_range=(0, 1))
+    scaler.fit(data['Close'].values.reshape(-1, 1))
+    y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
+    y_pred = forecast_next_7_days_keras(data['Close'], keras_model, scaler)
 
-        # Plot Original vs Predicted Prices
-        st.subheader('Original vs Predicted Prices')
-        fig_pred = go.Figure()
-        fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_pred, mode='lines', name='Predicted Price',
-                                       hovertemplate='Date: %{x}<br>Predicted Price: %{y:.2f}<extra></extra>'))
-        fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_true, mode='lines', name='Original Price',
-                                       hovertemplate='Date: %{x}<br>Original Price: %{y:.2f}<extra></extra>'))
-        fig_pred.update_layout(title='Original Price vs Predicted Price', xaxis_title='Date', yaxis_title='Price')
-        st.plotly_chart(fig_pred)
+    # Plot Original vs Predicted Prices
+    st.subheader('Original vs Predicted Prices')
+    fig_pred = go.Figure()
+    fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_pred, mode='lines', name='Predicted Price',
+                                   hovertemplate='Date: %{x}<br>Predicted Price: %{y:.2f}<extra></extra>'))
+    fig_pred.add_trace(go.Scatter(x=data.index[-7:], y=y_true, mode='lines', name='Original Price',
+                                   hovertemplate='Date: %{x}<br>Original Price: %{y:.2f}<extra></extra>'))
+    fig_pred.update_layout(title='Original Price vs Predicted Price', xaxis_title='Date', yaxis_title='Price')
+    st.plotly_chart(fig_pred)
 
-        # Forecasted Prices for Next 7 Days
-        st.subheader('Next 7 Days Forecasted Close Prices')
-        forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=7)
-        forecast_df = pd.DataFrame({'Date': forecast_dates, 'Forecasted Close Price': y_pred})
-        st.write(forecast_df)
+    # Forecasted Prices for Next 7 Days
+    st.subheader('Next 7 Days Forecasted Close Prices')
+    forecast_dates = pd.date_range(start=data.index[-1] + pd.Timedelta(days=1), periods=7)
+    forecast_df = pd.DataFrame({'Date': forecast_dates, 'Forecasted Close Price': y_pred})
+    st.write(forecast_df)
 
-if __name__ == "__main__":
-    main()
+except Exception as e:
+    st.error(f"Error loading or using the model: {e}")
