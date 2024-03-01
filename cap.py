@@ -33,11 +33,9 @@ def train_svr_model(data):
 
 # Function to forecast next 7 days' stock prices using SVR model
 def forecast_next_7_days_svr(data, model, scaler):
-    last_100_days = data[-100:].values.reshape(-1, 1)
-    scaled_last_100_days = scaler.transform(last_100_days)
     X_pred = np.arange(len(data), len(data) + 7).reshape(-1, 1)
-    forecasts = model.predict(X_pred)
-    return scaler.inverse_transform(forecasts)
+    forecasts = model.predict(scaler.transform(X_pred))
+    return forecasts
 
 # Streamlit UI
 def main():
@@ -90,17 +88,15 @@ def main():
 
     # Model Training and Prediction
     if selected_model in ml_models and ml_models[selected_model] is not None:
+        model = ml_models[selected_model]
         if selected_model == 'Keras Neural Network':
-            model = ml_models[selected_model]
             scaler = MinMaxScaler(feature_range=(0, 1))
             scaler.fit(data['Close'].values.reshape(-1, 1))
             y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
             y_pred = forecast_next_7_days_keras(data['Close'], model, scaler)
         elif selected_model == 'Support Vector Regressor (SVR)':
-            model = ml_models[selected_model]
-            scaler = svr_scaler
             y_true = data['Close'].values[-7:]  # Take the last 7 days' true values
-            y_pred = forecast_next_7_days_svr(data['Close'], model, scaler)
+            y_pred = forecast_next_7_days_svr(data, model, svr_scaler)
 
         # Plot Original vs Predicted Prices
         st.subheader('Original vs Predicted Prices')
